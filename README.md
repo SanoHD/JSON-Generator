@@ -59,3 +59,11 @@ We generate **3** random user-objects:
 | fnow       | Current float timestamp                    | 1612304012.9423177                       |
 | int        | Random integer from 0-65535                | 51814                                    |
 | float      | Random float from 0-65535                  | 46989.959716188394                       |
+
+## Speed
+| # of repeats | Average time (V0.2) | Average time (V0.1) |
+|--------------|---------------------|---------------------|
+| 10           | 0.0036s             | 0.00374s            |
+| 100          | 0.0119s             | 0.03420s            |
+| 1,000        | 0.0796s             | 0.21801s            |
+| 10,000       | 0.7488s             | 20.31193s           |
