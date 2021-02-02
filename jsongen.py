@@ -8,15 +8,40 @@ from string import ascii_letters
 HELP = """Usage: python3 jsongen.py (options) <template-file> <repeat> <output-file>
 
 Options can be:
-	-h, --help			Show help and exit
-	--version			Show version and exit
+	-h, --help              Show help and exit
+	--version               Show version and exit
+	--verbose               Show advanced output
 
-	-o '...'			Change the function operator (Default is '~')
-	--verbose			Show advanced output"""
+	-t                      Output elapsed time
 
-VERSION = "JSONGen - Version 0.1"
+	-o <str>                Change the function operator (Default is '~')
+	--hashlen <int>         Change length of hash (Default is 40)
+	--now <float>           Change current timestamt (Default is current time)
+	--min-pw <int>          Change minimum password length (Default is 8)
+	--max-pw <int>          Change maximum password length (Default is 16)
+	--min-int <int>         Change minimum integer (Default is 0)
+	--max-int <int>         Change maximum integer (Default is 65535)
+	--min-float <float>     Change minimum float (Default is 0.0)
+	--max-float <float>     Change maximum float (Default is 65535.0)"""
+
+VERSION = "JSONGen - Version 0.2"
+
+t0 = time()
+
+def checkArgOption(arg, desc, type_, default):
+	if arg in options:  # Change function operator
+		try:
+			return type_(options[options.index(arg) + 1])
+
+		except (IndexError, ValueError):
+			print("Usage of '"+arg+"' ("+str(default)+"): "+arg+" <"+desc+" ("+str(type_)[8:-2]+")>")
+			sys.exit()
+
+	else:
+		return type_(default)
 
 try:
+	# Removing 'jsongen.py'
 	sys.argv = sys.argv[1:]
 
 	if "--help" in sys.argv or "-h" in sys.argv:
@@ -32,18 +57,27 @@ try:
 	repeat = int(sys.argv[-2])
 	outputFilePath = sys.argv[-1]
 
-	if "-o" in options:  # Change function operator
-		try:
-			funcOp = options[options.index("-o") + 1]
-		except IndexError:
-			print("Usage of '-o': -o <function-operator>")
-	else:
-		funcOp = "~"
+	# variable = checkArgOption(argument, description, type, defaultValue)
+	funcOp = checkArgOption("-o", "function-operator", str, "~")
+	hashLength = checkArgOption("--hashlen", "hash-length", int, 40)
+	nowTime = checkArgOption("--now", "timestamp-now", float, time())
+
+	minPW = checkArgOption("--min-pw", "min-password-length", int, 8)
+	maxPW = checkArgOption("--max-pw", "max-password-length", int, 16)
+	minInt = checkArgOption("--min-int", "min-int", int, 0)
+	maxInt = checkArgOption("--max-int", "max-int", int, 65535)
+	minFloat = checkArgOption("--min-float", "min-float", float, 0.0)
+	maxFloat = checkArgOption("--max-float", "max-float", float, 65535.0)
 
 	if "--verbose" in sys.argv:
 		verbose = True
 	else:
 		verbose = False
+
+	if "-t" in sys.argv:
+		showElapsedTime = True
+	else:
+		showElapsedTime = False
 
 except (IndexError, ValueError):
 	print("Usage: python3 jsongen.py (options) <template-file> <repeat> <output-file>")
@@ -55,16 +89,16 @@ def printVerbose(text):
 
 printVerbose("Defining gen-functions.")
 class gen:
-	def hash(length=40):
+	def hash():
 		h = ""
-		for a in range(length):
+		for a in range(hashLength):
 			h += choice("0123456789abcdef")
 
 		return h
 
 	def password():
 		p = ""
-		for a in range(randint(8, 16)):
+		for a in range(randint(minPW, maxPW)):
 			p += choice(ascii_letters)
 
 		return p
@@ -106,23 +140,23 @@ class gen:
 
 		return u
 
-	def int_(min=0, max=65535):
-		return str(randint(min, max))
+	def int_():
+		return str(randint(minInt, maxInt))
 
-	def float_(min=0, max=65535):
-		return str(uniform(min, max))
+	def float_():
+		return str(uniform(minFloat, maxFloat))
 
 	def now():
-		return str(int(time()))
+		return str(int(nowTime))
 
 	def fnow():
-		return str(time())
+		return str(nowTime)
 
 	def timestamp():
-		return str(randint(0, int(time())))
+		return str(randint(0, int(nowTime)))
 
 	def ftimestamp():
-		return str(uniform(0, time()))
+		return str(uniform(0, nowTime))
 
 
 def readTemplate(path):
@@ -157,15 +191,21 @@ singleObject = readTemplate(tempFilePath)
 
 printVerbose("Creating object.")
 printVerbose("  => Length: " + str(repeat))
+
+printVerbose("Using functions.")
 for a in range(repeat):
-	jsonObject.append(singleObject)
+	soString = json.dumps(singleObject)
+	for func in functions:
+		while funcOp + func + funcOp in soString:
+			soString = soString.replace(funcOp + func + funcOp, functions[func](), 1)
+
+	jsonObject.append(json.loads(soString))
 
 printVerbose("Writing.")
-
 with open(outputFilePath, "w+") as of:
 	jsonString = json.dumps(jsonObject, indent=4, sort_keys=True)
-	for func in functions:
-		while funcOp + func + funcOp in jsonString:
-			jsonString = jsonString.replace(funcOp + func + funcOp, functions[func](), 1)
-
 	of.write(jsonString)
+
+elapsedTime = round(time() - t0, 5)
+if showElapsedTime:
+	print("Generating", str(repeat), "object" if repeat == 1 else "objects", "took", elapsedTime, "second" if elapsedTime == 1 else "seconds")
