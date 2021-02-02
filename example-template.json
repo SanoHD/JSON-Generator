@@ -1,0 +1,13 @@
+{
+	"username":			"~username~",
+	"password":			"~hash~",
+	"raw_password":		"~password~",
+
+	"modification-1":	"~timestamp~",
+	"modification-2":	"~ftimestamp~",
+	"creation-1":		"~now~",
+	"creation-2":		"~fnow~",
+
+	"int":				"~int~",
+	"float":			"~float~"
+}
