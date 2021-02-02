@@ -168,6 +168,10 @@ def readTemplate(path):
 		print("Error: Can't read template-file. Check syntax.")
 		sys.exit()
 
+	except FileNotFoundError:
+		print("Error: File '"+path+"' not found.")
+		sys.exit()
+
 	return tj
 
 printVerbose("Connecting functions.")
